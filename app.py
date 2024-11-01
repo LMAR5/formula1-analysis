@@ -2,7 +2,7 @@ import faicons as fa
 import plotly.express as px
 
 # Load data and compute static values
-from processing.data_process_sidebar import teams_dict, seasons_dict, tracks_dict, drivers_dict
+from processing.data_process_sidebar import teams_dict, seasons_dict, tracks_dict, drivers_dict, _select_filters_df
 from processing.data_process_q12 import app_dir, race_schedule_df
 from processing.data_process_q3 import app_dir
 from processing.data_process_q45 import app_dir
@@ -27,15 +27,15 @@ with ui.sidebar():
         remove_button=True # Reset the select input component
     )
     ui.input_selectize(
-        "select_team",
-        "Select a team:",
-        choices=teams_dict,
-        remove_button=True
-    )
-    ui.input_selectize(
         "select_track",
         "Select a track:",
         choices=tracks_dict,
+        remove_button=True
+    )
+    ui.input_selectize(
+        "select_team",
+        "Select a team:",
+        choices=teams_dict,
         remove_button=True
     )
     ui.input_selectize(
@@ -49,11 +49,11 @@ with ui.sidebar():
     def season():
         return f"Selected [Season ID]: {input.select_season()}"
     @render.text
-    def team():
-        return f"Selected [Team ID]: {input.select_team()}"
-    @render.text
     def track():
         return f"Selected [Track ID]: {input.select_track()}"
+    @render.text
+    def team():
+        return f"Selected [Team ID]: {input.select_team()}"
     @render.text
     def driver():
         return f"Selected [Driver ID]: {input.select_driver()}"
@@ -86,6 +86,42 @@ with ui.nav_panel("Question 5"):
 # ------------------------------------------------------------------
 # Reactive calculations and effects
 # ------------------------------------------------------------------
+
+# Reactive calculation and effects for sidebar
+# Author: N/A
+# --------------------------------------------------------
+def update_dict(old_dic: dict, lst_values) -> dict:
+    tmp_dict = dict()
+    for key, value in old_dic.items():
+        if key in lst_values:
+            tmp_dict[key] = value
+    return tmp_dict
+
+@reactive.effect
+def filter_sidebar_seasons():
+    selected_season_id = input.select_season()
+    if selected_season_id != "":
+        # Get season year and filter dataframe by selected season
+        selected_season_id = int(selected_season_id)
+        selected_season_year = seasons_dict[selected_season_id]
+        tmp_lst = _select_filters_df[_select_filters_df['year'] == selected_season_year]
+        # Filter the teams select box options
+        tmp_teams_lst = tmp_lst[['constructorId']]
+        new_teams_dict = update_dict(teams_dict, tmp_teams_lst.values)
+        ui.update_selectize("select_team", choices=new_teams_dict)
+        # Filter the tracks/circuits select box options
+        tmp_tracks_lst = tmp_lst[['circuitId']]
+        new_tracks_dict = update_dict(tracks_dict, tmp_tracks_lst.values)
+        ui.update_selectize("select_track", choices=new_tracks_dict)
+        # Filter the drivers select box options
+        tmp_drivers_lst = tmp_lst[['driverId']]
+        new_drivers_dict = update_dict(drivers_dict, tmp_drivers_lst.values)
+        ui.update_selectize("select_driver", choices=new_drivers_dict)
+    else:
+        # If no year is selected, show all available values
+        ui.update_selectize("select_team", choices=teams_dict)
+        ui.update_selectize("select_track", choices=tracks_dict)
+        ui.update_selectize("select_driver", choices=drivers_dict)
 
 
 # Reactive calculation and effects for Questions 1 and 2
