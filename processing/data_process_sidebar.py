@@ -9,8 +9,7 @@ tracks_df = pd.read_csv(app_dir / "data/Track_Information.csv")
 drivers_df = pd.read_csv(app_dir / "data/Driver_Details.csv")
 # To build internal dataframe that will be used to filter all select boxes
 race_schedule_df = pd.read_csv(app_dir / "data/Race_Schedule.csv")
-constructor_ranking_df = pd.read_csv(app_dir / "data/Constructor_Rankings.csv")
-driver_rankings_df = pd.read_csv(app_dir / "data/Driver_Rankings.csv")
+race_results_df = pd.read_csv(app_dir / "data/Race_Results.csv")
 
 
 
@@ -31,16 +30,13 @@ drivers_dict = dict(zip(drivers_df["driverId"], drivers_df["fullname"]))
 
 # Build internal dataframe to filter all select boxes
 # ----------------------------------------------------------------
-# Table columns: RaceID, Year, TeamID, TrackID, DriverID
+# Table columns: raceId, year, teamId, trackId, driverId
 
 # 1. From "race_schedule_df" get the columns "raceId", "year", and "circuitId"
 _select_filters_df = race_schedule_df[['raceId', 'year', 'circuitId']]
 
-# 2. Join the "race_schedule_df" and the "constructor_ranking_df" based on their common key "raceId"
-_select_filters_df = _select_filters_df.join(constructor_ranking_df[['raceId', 'constructorId']].set_index('raceId'), on='raceId')
-
-# 3. Join the "_select_filters_df" with "driver_rankings_df" based on their common key "raceId"
-_select_filters_df = _select_filters_df.join(driver_rankings_df[['raceId', 'driverId']].set_index('raceId'), on='raceId')
+# 2. Join the "race_schedule_df" and the "race_results_df" based on their common key "raceId"
+_select_filters_df = _select_filters_df.join(race_results_df[['raceId', 'driverId', 'constructorId']].set_index('raceId'), on='raceId')
 
 # Fill missing values in columns "constructorId" and "driverId" with 0.
 # - Problem: Some results of some races were not mapped in Dataset. For example, some races of 2024 have not been updated yet.
