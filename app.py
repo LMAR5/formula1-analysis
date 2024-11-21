@@ -175,7 +175,15 @@ def filter_df_by_selection(all_data, selected_tuple: tuple, type: str):
                 all_data = all_data[all_data['driverId'].isin(selected_entity_lst)]
     return all_data
 
+# State variables - Store variables selected by the user
+# Link: https://shiny.posit.co/py/docs/reactive-foundations.html#values
+input_seasons = reactive.value(tuple())
+input_teams = reactive.value(tuple())
+input_drivers = reactive.value(tuple())
+input_tracks = reactive.value(tuple())
+
 @reactive.effect
+@reactive.event(input.select_season, input.select_team, input.select_driver, input.select_track)
 def filter_sidebar_tracks():
     selected_season_tuple: tuple = input.select_season()
     selected_team_tuple: tuple = input.select_team()
@@ -186,37 +194,77 @@ def filter_sidebar_tracks():
     tmp_lst = filter_df_by_selection(tmp_lst, selected_team_tuple, "team")
     tmp_lst = filter_df_by_selection(tmp_lst, selected_track_tuple, "track")
     tmp_lst = filter_df_by_selection(tmp_lst, selected_driver_tuple, "driver")
-    tmp_seasons_lst = tmp_lst[['year']]
-    new_seasons_dict = update_dict(seasons_dict, tmp_seasons_lst.values, "season")
+    # [1] Seasons filtering
     selected_seasons_lst: list[str] = []
     for item in selected_season_tuple:
         selected_seasons_lst.append(item)
-    ui.update_selectize("select_season", choices=new_seasons_dict, selected=selected_seasons_lst)
-    tmp_tracks_lst = tmp_lst[['circuitId']]
-    new_tracks_dict = update_dict(tracks_dict, tmp_tracks_lst.values)
+    tmp_seasons_lst = tmp_lst[['year']]
+    # Compare old selected "seasons" vs new selected "seasons"
+    if selected_season_tuple != input_seasons():
+        # user edit "season" select box = modified search = do not filter choices
+        ui.update_selectize("select_season", choices=seasons_dict, selected=selected_seasons_lst)
+        # Update "seasons" state variable with new values
+        input_seasons.set(input_seasons() + selected_season_tuple)
+    else:
+        # user did not edit "season" select box = did not modified search = filter choices based on other boxes selection
+        new_seasons_dict = update_dict(seasons_dict, tmp_seasons_lst.values, "season")
+        ui.update_selectize("select_season", choices=new_seasons_dict, selected=selected_seasons_lst)
+    # [2] Track filtering
     selected_tracks_lst: list[int] = []
     for item in selected_track_tuple:
         selected_tracks_lst.append(int(item))
-    ui.update_selectize("select_track", choices=new_tracks_dict, selected=selected_tracks_lst)
-    tmp_teams_lst = tmp_lst[['constructorId']]
-    new_teams_dict = update_dict(teams_dict, tmp_teams_lst.values)
+    tmp_tracks_lst = tmp_lst[['circuitId']]
+    # Compare old selected "tracks" vs new selected "tracks"
+    if selected_track_tuple != input_tracks():
+        # user edit "tracks" select box = modified search = do not filter choices
+        ui.update_selectize("select_track", choices=tracks_dict, selected=selected_tracks_lst)
+        # Update "tracks" state variable with new values
+        input_tracks.set(input_tracks() + selected_track_tuple)
+    else:
+        # user did not edit "tracks" select box = did not modified search = filter choices based on other boxes selection
+        new_tracks_dict = update_dict(tracks_dict, tmp_tracks_lst.values)
+        ui.update_selectize("select_track", choices=new_tracks_dict, selected=selected_tracks_lst)
+    # [3] Constructors filtering
     selected_teams_lst: list[int] = []
     for item in selected_team_tuple:
         selected_teams_lst.append(int(item))
-    ui.update_selectize("select_team", choices=new_teams_dict, selected=selected_teams_lst)    
-    tmp_drivers_lst = tmp_lst[['driverId']]
-    new_drivers_dict = update_dict(drivers_dict, tmp_drivers_lst.values)
+    tmp_teams_lst = tmp_lst[['constructorId']]
+    # Compare old selected "teams" vs new selected "teams"
+    if selected_team_tuple != input_teams():
+        # user edit "teams" select box = modified search = do not filter choices
+        ui.update_selectize("select_team", choices=teams_dict, selected=selected_teams_lst)
+        # Update "teams" state variable with new values
+        input_teams.set(input_teams() + selected_team_tuple)
+    else:
+        # user did not edit "teams" select box = did not modified search = filter choices based on other boxes selection
+        new_teams_dict = update_dict(teams_dict, tmp_teams_lst.values)
+        ui.update_selectize("select_team", choices=new_teams_dict, selected=selected_teams_lst)
+    # [4] Drivers filtering
     selected_drivers_lst: list[int] = []
     for item in selected_driver_tuple:
         selected_drivers_lst.append(int(item))
-    ui.update_selectize("select_driver", choices=new_drivers_dict, selected=selected_drivers_lst)
+    tmp_drivers_lst = tmp_lst[['driverId']]
+    # Compare old selected "drivers" vs new selected "drivers"
+    if selected_driver_tuple != input_drivers():
+        # user edit "drivers" select box = modified search = do not filter choices
+        ui.update_selectize("select_driver", choices=drivers_dict, selected=selected_drivers_lst)
+        # Update "drivers" state variable with new values
+        input_drivers.set(input_drivers() + selected_driver_tuple)
+    else:
+        # user did not edit "drivers" select box = did not modified search = filter choices based on other boxes selection
+        new_drivers_dict = update_dict(drivers_dict, tmp_drivers_lst.values)
+        ui.update_selectize("select_driver", choices=new_drivers_dict, selected=selected_drivers_lst)
 
 @reactive.effect
 @reactive.event(input.reset)
 def _():
+    input_seasons.set(tuple())
     ui.update_selectize("select_season", choices=seasons_dict)
+    input_teams.set(tuple())
     ui.update_selectize("select_team", choices=teams_dict)
+    input_drivers.set(tuple())
     ui.update_selectize("select_driver", choices=drivers_dict)
+    input_drivers.set(tuple())
     ui.update_selectize("select_track", choices=tracks_dict)
 
     
@@ -314,5 +362,5 @@ def summary_data_q4():
     summary_data = filter_df_by_selection(summary_data, selected_driver_tuple, "driver")
     summary_data['Sprint_Pts'] = summary_data['Sprint_Pts'].astype(str)
     summary_data['Sprint_Pts'] = summary_data['Sprint_Pts'].replace('-1', 'N/A')
-    summary_data = summary_data[['year', 'Team', 'Driver', 'Sprint_Pts', 'Qualifying_Pos', 'Race_Pts', 'Status']]
+    summary_data = summary_data[['year', 'Team', 'Driver', 'Track', 'Sprint_Pts', 'Qualifying_Pos', 'Race_Pts', 'Status']]
     return summary_data
