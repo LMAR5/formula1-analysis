@@ -3,7 +3,7 @@ import plotly.express as px
 
 # Load data and compute static values
 from processing.data_process_sidebar import teams_dict, seasons_dict, tracks_dict, drivers_dict, _select_filters_df
-from processing.data_process_q12 import app_dir, constructor_total_points_per_year, driver_total_points_per_year
+from processing.data_process_q12 import app_dir, constructor_average_points_per_year, driver_average_points_per_year, driver_top_10_average_points, constructor_top_10_average_points
 from processing.data_process_q3 import app_dir
 from processing.data_process_q45 import app_dir
 from shinywidgets import render_plotly
@@ -12,7 +12,7 @@ from shiny import reactive, render
 from shiny.express import input, ui
 
 # Load plot functions
-from plots.plots_q12 import plot_constructor_performance, plot_driver_performance
+from plots.plots_q12 import plot_constructor_performance, plot_driver_performance, plot_top_10_drivers, plot_top_10_teams
 
 # Page title
 ui.page_opts(title="Formula 1 Analysis")
@@ -74,6 +74,9 @@ with ui.nav_panel("Question 1"):
             @render_plotly
             def constructor_performance():
                 return plot_constructor_performance(total_points_for_sel_constructors())
+            @render_plotly
+            def top_10_teams():
+                return plot_top_10_teams(constructor_top_10_average_points)
 
 
 with ui.nav_panel("Question 2"):
@@ -84,6 +87,9 @@ with ui.nav_panel("Question 2"):
             @render_plotly
             def driver_performance():
                 return plot_driver_performance(total_points_for_sel_drivers())
+            @render_plotly
+            def top_10_drivers():
+                return plot_top_10_drivers(driver_top_10_average_points)
 
 with ui.nav_panel("Question 3"):
     ui.h4("Question 3 content")
@@ -211,10 +217,10 @@ def total_points_for_sel_constructors():
     # If any teams are selected by user filter df
     if len(selected_team_tuple) > 0 and selected_team_tuple[0] is not None:
         selected_teams_lst = [teams_dict[int(team_id)] for team_id in selected_team_tuple]
-        filtered_data = constructor_total_points_per_year[constructor_total_points_per_year['name'].isin(selected_teams_lst)]
+        filtered_data = constructor_average_points_per_year[constructor_average_points_per_year['name'].isin(selected_teams_lst)]
     else:
         # If no team is selected, use the entire dataset
-        filtered_data = constructor_total_points_per_year 
+        filtered_data = constructor_average_points_per_year 
     return filtered_data
 
 @reactive.calc
@@ -224,10 +230,10 @@ def total_points_for_sel_drivers():
     # If any teams are selected by user filter df
     if len(selected_driver_tuple) > 0 and selected_driver_tuple[0] is not None:
         selected_drivers_lst = [drivers_dict[int(team_id)] for team_id in selected_driver_tuple]
-        filtered_data = driver_total_points_per_year[driver_total_points_per_year ['name'].isin(selected_drivers_lst)]
+        filtered_data = driver_average_points_per_year[driver_average_points_per_year ['name'].isin(selected_drivers_lst)]
     else:
         # If no team is selected, use the entire dataset
-        filtered_data = driver_total_points_per_year  
+        filtered_data = driver_average_points_per_year  
     return filtered_data
 
 # Reactive calculation and effects for Question 3
