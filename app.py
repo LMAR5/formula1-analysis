@@ -13,10 +13,11 @@ from shiny.express import input, ui
 
 # Load plot functions
 from plots.plots_q12 import num_driver_per_season
-from plots.plots_q45 import qualipos_racepts_scatterplot, sprintpts_racepts_scatterplot, status_by_driver_piechart
+from plots.plots_q45 import qualipos_racepts_scatterplot, sprintpts_racepts_scatterplot, status_by_driver_piechart, drivers_per_team_barchart_q5, points_per_driver_barchart_q5, races_per_driver_barchart_q5
 
 # Page title
 ui.page_opts(title="Formula 1 Analysis")
+ui.head_content(ui.tags.link(rel="icon", type="image/x-icon", href="favicon.ico"))
 
 # The sidebar is shared across all question pages
 with ui.sidebar():
@@ -114,27 +115,27 @@ with ui.nav_panel("Question 4"):
 
 with ui.nav_panel("Question 5"):
     ui.h4("Which team has provided the most talented drivers throughout the years?")
-    with ui.layout_columns(col_widths={"sm": (6,6,5,7)}):
+    with ui.layout_columns(col_widths={"sm": (6,6,6,6)}):
         with ui.card(full_screen=True):
             ui.card_header("Number of drivers per constructor team")
-            @render.plot
+            @render_plotly
             def drivers_per_constructor_q5():
-                pass
+                return drivers_per_team_barchart_q5(drivers_per_team_bar_data_q5())
         with ui.card(full_screen=True):
             ui.card_header("Total of points by driver")
-            @render.plot
+            @render_plotly
             def points_per_driver_q5():
-                pass
+                return points_per_driver_barchart_q5(points_per_driver_bar_data_q5())
         with ui.card(full_screen=True):
             ui.card_header("Most completed races by driver")
-            @render.plot
+            @render_plotly
             def completed_per_driver_q5():
-                pass
+                return races_per_driver_barchart_q5(races_per_driver_bar_data_q5())
         with ui.card(full_screen=True):
             ui.card_header("Summary of races per driver")
-            @render.plot
+            @render.data_frame
             def races_summary_q5():
-                pass
+                return render.DataGrid(summary_data_q5(), styles=[{"style": {"font-size": "0.8em"}}])
 
 
 
@@ -335,6 +336,14 @@ def sprintpts_racepts_data_q4():
     lst_data = filter_df_by_selection(lst_data, selected_driver_tuple, "driver")
     return lst_data
 
+def standardize_status_label(in_status: str) -> str:
+    # Set w/ unique status that tells if the driver completed the race
+    finished_status_lst = {"Finished", "+1 Lap", "+2 Laps", "+3 Laps", "+4 Laps", "+5 Laps", "+6 Laps", "+7 Laps", "+8 Laps", "+9 Laps", "+10 Laps", "+11 Laps", "+12 Laps", "+13 Laps", "+14 Laps", "+15 Laps", "+16 Laps", "+17 Laps", "+18 Laps", "+19 Laps", "+20 Laps", "+21 Laps", "+22 Laps", "+23 Laps", "+24 Laps", "+25 Laps", "+26 Laps", "+29 Laps", "+30 Laps", "+38 Laps", "+42 Laps", "+44 Laps", "+46 Laps", "+49 Laps"}
+    if in_status not in finished_status_lst:
+        return "Not Finished"
+    else:
+        return "Finished"
+
 @reactive.calc
 def race_status_data_q4():
     selected_season_tuple: tuple = input.select_season()
@@ -347,6 +356,7 @@ def race_status_data_q4():
     lst_data = filter_df_by_selection(lst_data, selected_team_tuple, "team")
     lst_data = filter_df_by_selection(lst_data, selected_driver_tuple, "driver")
     lst_data = lst_data[['idx', 'statusId', 'Status', 'Total status']]
+    lst_data['Status'] = lst_data['Status'].apply(standardize_status_label)
     return lst_data
 
 @reactive.calc
@@ -363,4 +373,88 @@ def summary_data_q4():
     summary_data['Sprint_Pts'] = summary_data['Sprint_Pts'].astype(str)
     summary_data['Sprint_Pts'] = summary_data['Sprint_Pts'].replace('-1', 'N/A')
     summary_data = summary_data[['year', 'Team', 'Driver', 'Track', 'Sprint_Pts', 'Qualifying_Pos', 'Race_Pts', 'Status']]
+    return summary_data
+
+# Question 5 methods
+def make_name_shorter(in_name: str) -> str:
+    if len(in_name) > 14:
+        return in_name[:13] + ".."
+    else:
+        return in_name
+
+@reactive.calc
+def drivers_per_team_bar_data_q5():
+    selected_team_tuple: tuple = input.select_team()
+    selected_driver_tuple: tuple = input.select_driver()
+    lst_data = _qualipos_racepts_df[['driverId','constructorId', 'Team']]
+    lst_data = lst_data.drop_duplicates()
+    lst_data = filter_df_by_selection(lst_data, selected_team_tuple, "team")
+    lst_data = filter_df_by_selection(lst_data, selected_driver_tuple, "driver")
+    # Count the drivers per Team
+    lst_data = lst_data[['Team', 'driverId']]
+    lst_data = lst_data.groupby('Team').count().reset_index()
+    lst_data = lst_data.sort_values('driverId', ascending=False)
+    lst_data['Team'] = lst_data['Team'].apply(make_name_shorter)
+    return lst_data
+
+@reactive.calc
+def points_per_driver_bar_data_q5():
+    selected_season_tuple: tuple = input.select_season()
+    selected_track_tuple: tuple = input.select_track()
+    selected_team_tuple: tuple = input.select_team()
+    selected_driver_tuple: tuple = input.select_driver()
+    lst_data = _qualipos_racepts_df[['raceId','year','circuitId','driverId','constructorId', 'Race_Pts', 'Driver']]
+    lst_data = filter_df_by_selection(lst_data, selected_season_tuple, "season")
+    lst_data = filter_df_by_selection(lst_data, selected_track_tuple, "track")
+    lst_data = filter_df_by_selection(lst_data, selected_team_tuple, "team")
+    lst_data = filter_df_by_selection(lst_data, selected_driver_tuple, "driver")
+    # Add up the number of points by driver
+    lst_data = lst_data[['Driver', 'Race_Pts']]
+    lst_data = lst_data.groupby('Driver').sum().reset_index()
+    lst_data = lst_data.sort_values('Race_Pts', ascending=False)
+    lst_data['Driver'] = lst_data['Driver'].apply(make_name_shorter)
+    return lst_data
+
+def determine_type_status(in_status: str) -> int:
+    if in_status == "Finished":
+        return 1
+    else:
+        return 0
+
+@reactive.calc
+def races_per_driver_bar_data_q5():
+    selected_season_tuple: tuple = input.select_season()
+    selected_track_tuple: tuple = input.select_track()
+    selected_team_tuple: tuple = input.select_team()
+    selected_driver_tuple: tuple = input.select_driver()
+    lst_data = _qualipos_racepts_df[['raceId','year','circuitId','driverId','constructorId', 'Driver', 'Status', 'Total status']]
+    lst_data = filter_df_by_selection(lst_data, selected_season_tuple, "season")
+    lst_data = filter_df_by_selection(lst_data, selected_track_tuple, "track")
+    lst_data = filter_df_by_selection(lst_data, selected_team_tuple, "team")
+    lst_data = filter_df_by_selection(lst_data, selected_driver_tuple, "driver")
+    lst_data = lst_data[['Driver', 'Status', 'Total status']]
+    # Create "Finished" field to set if the race was finished or not, based on the "Status" field
+    lst_data['Finished'] = lst_data['Status'].apply(determine_type_status)
+    lst_data_finished = lst_data[['Driver', 'Finished']].groupby('Driver').sum().reset_index()
+    lst_data_total = lst_data[['Driver', 'Total status']].groupby('Driver').sum().reset_index()
+    lst_data_all = lst_data_total.join(lst_data_finished.set_index('Driver'), on='Driver')
+    lst_data_all.rename(columns={'Total status': 'Total'}, inplace=True)
+    lst_data_all['RatioFinished'] = lst_data_all['Finished'] / lst_data_all['Total']
+    lst_data_all['RatioFinished'] = lst_data_all['RatioFinished'].round(2)
+    lst_data_all = lst_data_all.sort_values('RatioFinished', ascending=False)
+    lst_data_all['Driver'] = lst_data_all['Driver'].apply(make_name_shorter)
+    return lst_data_all
+
+@reactive.calc
+def summary_data_q5():
+    selected_season_tuple: tuple = input.select_season()
+    selected_track_tuple: tuple = input.select_track()
+    selected_team_tuple: tuple = input.select_team()
+    selected_driver_tuple: tuple = input.select_driver()
+    summary_data = _qualipos_racepts_df.copy()
+    summary_data = filter_df_by_selection(summary_data, selected_season_tuple, "season")
+    summary_data = filter_df_by_selection(summary_data, selected_track_tuple, "track")
+    summary_data = filter_df_by_selection(summary_data, selected_team_tuple, "team")
+    summary_data = filter_df_by_selection(summary_data, selected_driver_tuple, "driver")
+    summary_data = summary_data[['year', 'Team', 'Driver', 'Track', 'Race_Pts', 'Status']]
     return summary_data

@@ -65,3 +65,39 @@ def status_by_driver_piechart(data: pd.DataFrame):
         values='Total status'
     )
     return pie_chart
+
+# Question 5 plots
+def drivers_per_team_barchart_q5(data: pd.DataFrame):
+    bar_plot = px.bar(
+        data_frame=data,
+        x='driverId', 
+        y='Team', 
+        labels={'driverId':'Number of drivers'}, 
+        color='Team',
+        orientation='h')
+    bar_plot.update_layout(
+        showlegend=False
+        )
+    return bar_plot
+
+def points_per_driver_barchart_q5(data: pd.DataFrame):
+    bar_plot = px.bar(
+        data_frame=data,
+        x='Driver',
+        y='Race_Pts',
+        labels={'Race_Pts': 'Race points'},
+        color='Driver'
+    )
+    bar_plot.update_layout(showlegend=False)
+    return bar_plot
+
+def races_per_driver_barchart_q5(data: pd.DataFrame):
+    bar_plot = px.bar(
+        data_frame=data,
+        x='Driver',
+        y='RatioFinished',
+        labels={'RatioFinished':'% completed races'},
+        color='Driver'
+    )
+    bar_plot.update_layout(showlegend=False)
+    return bar_plot
