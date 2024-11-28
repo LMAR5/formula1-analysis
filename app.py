@@ -4,7 +4,7 @@ import plotly.express as px
 # Load data and compute static values
 from processing.data_process_sidebar import teams_dict, seasons_dict, tracks_dict, drivers_dict, _select_filters_df
 from processing.data_process_q12 import app_dir, race_schedule_df
-from processing.data_process_q3 import app_dir
+from processing.data_process_q3 import app_dir, pit_stop_records
 from processing.data_process_q45 import app_dir
 from shinywidgets import render_plotly
 
@@ -13,7 +13,7 @@ from shiny.express import input, ui
 
 # Load plot functions
 from plots.plots_q12 import num_driver_per_season
-
+from plots.plots_q3 import avg_pit_stop_duration
 # Page title
 ui.page_opts(title="Formula 1 Analysis")
 
@@ -80,7 +80,14 @@ with ui.nav_panel("Question 2"):
     ui.h4("Question 2 content")
 
 with ui.nav_panel("Question 3"):
-    ui.h4("Question 3 content")
+    ui.h4("Question 3 Pit Times")
+    with ui.layout_columns():
+        with ui.card(full_screen=True):
+            ui.card_header("Average Pit Stop Duration per Race")
+            @render_plotly
+            def avg_pit_stops_graph():
+                # Pass the relevant dataset to the function
+                return avg_pit_stop_duration(pit_stop_records)
 
 with ui.nav_panel("Question 4"):
     ui.h4("Question 4 content")
@@ -203,10 +210,8 @@ def drivers_per_sel_season():
 # Reactive calculation and effects for Question 3
 # Author: Matthew Bush
 # --------------------------------------------------------
-
 ## Write your functions for Q3 here
 # How have pit stop Umings and strategies affected race outcomes?
-
 
 
 
