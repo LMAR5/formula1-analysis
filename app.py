@@ -205,6 +205,11 @@ def drivers_per_sel_season():
 # --------------------------------------------------------
 
 ## Write your functions for Q3 here
+# How have pit stop Umings and strategies affected race outcomes?
+
+
+
+
 
 
 # Reactive calculation and effects for Questions 4 and 5
