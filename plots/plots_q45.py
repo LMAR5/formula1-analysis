@@ -29,6 +29,7 @@ def qualipos_racepts_scatterplot(data: pd.DataFrame):
             y="Qualifying_Pos", 
             labels={'Qualifying_Pos':'Qualifying position', 'Race_Pts': 'Race points'},
             size='count',
+            trendline='ols',
             hover_data=['count']
         )
         scatter_plot.update_yaxes(autorange="reversed")
@@ -53,6 +54,7 @@ def sprintpts_racepts_scatterplot(data: pd.DataFrame):
             y="Sprint_Pts", 
             labels={'Sprint_Pts':'Sprint points', 'Race_Pts': 'Race points'},
             size="count",
+            trendline='ols',
             hover_data=['count', 'year']
         )
         scatter_plot.update_traces(text=data['count'], textposition='top center')
@@ -69,7 +71,7 @@ def status_by_driver_piechart(data: pd.DataFrame):
 # Question 5 plots
 def drivers_per_team_barchart_q5(data: pd.DataFrame):
     bar_plot = px.bar(
-        data_frame=data,
+        data_frame=data.head(30),
         x='driverId', 
         y='Team', 
         labels={'driverId':'Number of drivers'}, 
@@ -82,7 +84,7 @@ def drivers_per_team_barchart_q5(data: pd.DataFrame):
 
 def points_per_driver_barchart_q5(data: pd.DataFrame):
     bar_plot = px.bar(
-        data_frame=data,
+        data_frame=data.head(30),
         x='Driver',
         y='Race_Pts',
         labels={'Race_Pts': 'Race points'},
@@ -93,10 +95,10 @@ def points_per_driver_barchart_q5(data: pd.DataFrame):
 
 def races_per_driver_barchart_q5(data: pd.DataFrame):
     bar_plot = px.bar(
-        data_frame=data,
+        data_frame=data.head(30),
         x='Driver',
         y='RatioFinished',
-        labels={'RatioFinished':'% completed races'},
+        labels={'RatioFinished':'% completed races'},                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
         color='Driver'
     )
     bar_plot.update_layout(showlegend=False)
