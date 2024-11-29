@@ -3,7 +3,7 @@ import plotly.express as px
 
 # Load data and compute static values
 from processing.data_process_sidebar import teams_dict, seasons_dict, tracks_dict, drivers_dict, _select_filters_df
-from processing.data_process_q12 import app_dir, race_schedule_df
+from processing.data_process_q12 import app_dir, constructor_average_points_per_year, driver_average_points_per_year, driver_top_10_average_points, constructor_top_10_average_points
 from processing.data_process_q3 import app_dir
 from processing.data_process_q45 import app_dir, _qualipos_racepts_df
 from shinywidgets import render_plotly
@@ -12,7 +12,7 @@ from shiny import reactive, render
 from shiny.express import input, ui
 
 # Load plot functions
-from plots.plots_q12 import num_driver_per_season
+from plots.plots_q12 import plot_constructor_performance, plot_driver_performance, plot_top_10_drivers, plot_top_10_teams
 from plots.plots_q45 import qualipos_racepts_scatterplot, sprintpts_racepts_scatterplot, status_by_driver_piechart, drivers_per_team_barchart_q5, points_per_driver_barchart_q5, races_per_driver_barchart_q5
 
 # Page title
@@ -73,14 +73,26 @@ with ui.nav_panel("Question 1"):
     ui.h4("Question 1")
     with ui.layout_columns():
         with ui.card(full_screen=True):
-            ui.card_header("Number of races across seasons")
+            ui.card_header("Constructor Performance Over the Years")
             @render_plotly
-            def drivers_season():
-                return num_driver_per_season(drivers_per_sel_season())
+            def constructor_performance():
+                return plot_constructor_performance(total_points_for_sel_constructors())
+            @render_plotly
+            def top_10_teams():
+                return plot_top_10_teams(constructor_top_10_average_points)
 
 
 with ui.nav_panel("Question 2"):
     ui.h4("Question 2 content")
+    with ui.layout_columns():
+        with ui.card(full_screen=True):
+            ui.card_header("Driver Performance Over the Years")
+            @render_plotly
+            def driver_performance():
+                return plot_driver_performance(total_points_for_sel_drivers())
+            @render_plotly
+            def top_10_drivers():
+                return plot_top_10_drivers(driver_top_10_average_points)
 
 with ui.nav_panel("Question 3"):
     ui.h4("Question 3 content")
@@ -276,27 +288,51 @@ def _():
 
 # Reactive function that triggers depending if an input variable changes (season - select box)
 # Link: https://shiny.posit.co/py/api/express/reactive.calc.html
-@reactive.calc
-def drivers_per_sel_season():
-    # Get the selected season by the end user
-    selected_season_tuple: tuple = input.select_season()
-    # Filter the race list to only 2 columns: raceId and year
-    lst_races = race_schedule_df[['raceId', 'year']]
-    # If a season was chosen in the select box
-    if len(selected_season_tuple) > 0:
-        if selected_season_tuple[0] is not None:
-            # From the select box, get the selected years in a list
-            selected_season_lst: list[int] = []
-            for item in selected_season_tuple:
-                selected_season_lst.append(seasons_dict[int(item)])
-            # Filter the drivers data by the selected seasons
-            lst_races = lst_races[lst_races['year'].isin(selected_season_lst)]
-    # Group the race list by the 'year' and count the number of 'raceId' per 'year'
-    lst_races = lst_races.groupby('year').count().reset_index()
-    return lst_races
+# @reactive.calc
+# def drivers_per_sel_season():
+#     # Get the selected season by the end user
+#     selected_season_tuple: tuple = input.select_season()
+#     # Filter the race list to only 2 columns: raceId and year
+#     lst_races = race_schedule_df[['raceId', 'year']]
+#     # If a season was chosen in the select box
+#     if len(selected_season_tuple) > 0:
+#         if selected_season_tuple[0] is not None:
+#             # From the select box, get the selected years in a list
+#             selected_season_lst: list[int] = []
+#             for item in selected_season_tuple:
+#                 selected_season_lst.append(seasons_dict[int(item)])
+#             # Filter the drivers data by the selected seasons
+#             lst_races = lst_races[lst_races['year'].isin(selected_season_lst)]
+#     # Group the race list by the 'year' and count the number of 'raceId' per 'year'
+#     lst_races = lst_races.groupby('year').count().reset_index()
+#     return lst_races
 
 ## Write your functions for Q1 and Q2 here
+@reactive.calc
+def total_points_for_sel_constructors():
+    # Get the selected team(s) by the end user
+    selected_team_tuple: tuple = input.select_team()
+    # If any teams are selected by user filter df
+    if len(selected_team_tuple) > 0 and selected_team_tuple[0] is not None:
+        selected_teams_lst = [teams_dict[int(team_id)] for team_id in selected_team_tuple]
+        filtered_data = constructor_average_points_per_year[constructor_average_points_per_year['name'].isin(selected_teams_lst)]
+    else:
+        # If no team is selected, use the entire dataset
+        filtered_data = constructor_average_points_per_year 
+    return filtered_data
 
+@reactive.calc
+def total_points_for_sel_drivers():
+    # Get the selected driver(s) by the end user
+    selected_driver_tuple: tuple = input.select_driver()
+    # If any teams are selected by user filter df
+    if len(selected_driver_tuple) > 0 and selected_driver_tuple[0] is not None:
+        selected_drivers_lst = [drivers_dict[int(team_id)] for team_id in selected_driver_tuple]
+        filtered_data = driver_average_points_per_year[driver_average_points_per_year ['name'].isin(selected_drivers_lst)]
+    else:
+        # If no team is selected, use the entire dataset
+        filtered_data = driver_average_points_per_year  
+    return filtered_data
 
 # Reactive calculation and effects for Question 3
 # Author: Matthew Bush
