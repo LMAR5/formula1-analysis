@@ -4,7 +4,7 @@ import plotly.express as px
 # Load data and compute static values
 from processing.data_process_sidebar import teams_dict, seasons_dict, tracks_dict, drivers_dict, _select_filters_df
 from processing.data_process_q12 import app_dir, constructor_average_points_per_year, driver_average_points_per_year, driver_top_10_average_points, constructor_top_10_average_points
-from processing.data_process_q3 import app_dir
+from processing.data_process_q3 import app_dir, q3_dataframes
 from processing.data_process_q45 import app_dir, _qualipos_racepts_df
 from shinywidgets import render_plotly
 
@@ -13,6 +13,7 @@ from shiny.express import input, ui
 
 # Load plot functions
 from plots.plots_q12 import plot_constructor_performance, plot_driver_performance, plot_top_10_drivers, plot_top_10_teams
+from plots.plots_q3 import avg_pit_stop_duration, scatter_wins_vs_pit_times
 from plots.plots_q45 import qualipos_racepts_scatterplot, sprintpts_racepts_scatterplot, status_by_driver_piechart, drivers_per_team_barchart_q5, points_per_driver_barchart_q5, races_per_driver_barchart_q5
 
 # Page title
@@ -102,7 +103,12 @@ with ui.nav_panel("Question 3"):
             @render_plotly
             def avg_pit_stops_graph():
                 # Pass the relevant dataset to the function
-                return avg_pit_stop_duration(pit_stop_records)
+                return avg_pit_stop_duration(q3_data_filter())
+            
+            @render_plotly
+            def avg_pit_stops_graph_test():
+                # Pass the relevant dataset to the function
+                return scatter_wins_vs_pit_times(q3_dataframes['pit_stop_records'], q3_data_filter())
 
 with ui.nav_panel("Question 4"):
     ui.h4("How can qualifying sessions and sprints impact drivers performance?")
@@ -347,6 +353,28 @@ def total_points_for_sel_drivers():
 ## Write your functions for Q3 here
 # How have pit stop Umings and strategies affected race outcomes?
 
+
+@reactive.calc
+def q3_data_filter():
+
+
+    # Get the selected driver(s) by the end user
+    selected_driver_tuple: tuple = input.select_driver()
+    # If any teams are selected by user filter df
+    if len(selected_driver_tuple) > 0 and selected_driver_tuple[0] is not None:
+        selected_drivers_lst = [drivers_dict[int(team_id)] for team_id in selected_driver_tuple]
+        filtered_data = q3_dataframes['pit_stop_records'][q3_dataframes['pit_stop_records'] ['name'].isin(selected_drivers_lst)]
+    else:
+        # If no team is selected, use the entire dataset
+        filtered_data = q3_dataframes['pit_stop_records']
+    
+
+    #print('test')
+    print(q3_dataframes['pit_stop_records'].head())
+
+
+    
+    return filtered_data
 
 
 
