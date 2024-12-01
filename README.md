@@ -3,6 +3,13 @@ Formula 1 Analysis is an interactive data visualization system that explores his
 
 - Dataset link: https://www.kaggle.com/datasets/muhammadehsan02/formula-1-world-championship-history-1950-2024
 
+## Team
+
+Team 04:
+- Luis Aguilar
+- Siham Argaw
+- Matthew Bush
+
 ## Getting started
 
 ### Prerequisites
@@ -58,6 +65,22 @@ You'll have to create the `.vscode` directory, create a `settings.json` file, an
 
 ## App Screenshots
 
-### Initial version
+### Question 1 charts
 
-![Initial version](https://github.com/luisaguilar159/fa24-csc805-g4-f1/blob/main/screenshots/initial_version.jpg)
+![Question 1 view](https://github.com/luisaguilar159/fa24-csc805-g4-f1/blob/main/screenshots/question1.jpg)
+
+### Question 2 charts
+
+![Question 2 view](https://github.com/luisaguilar159/fa24-csc805-g4-f1/blob/main/screenshots/question2.jpg)
+
+### Question 3 charts
+
+![Question 3 view](https://github.com/luisaguilar159/fa24-csc805-g4-f1/blob/main/screenshots/question3.jpg)
+
+### Question 4 charts
+
+![Question 4 view](https://github.com/luisaguilar159/fa24-csc805-g4-f1/blob/main/screenshots/question4.jpg)
+
+### Question 5 charts
+
+![Question 5 view](https://github.com/luisaguilar159/fa24-csc805-g4-f1/blob/main/screenshots/question5.jpg)

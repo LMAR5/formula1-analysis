@@ -6,7 +6,7 @@ app_dir = Path(__file__).parent.parent
 
 ## Load your CSV files here, follow the example in "data_process_sidebar.py"
 
-str_data_path = str(app_dir) + '\\data\\'
+str_data_path = str(app_dir) + '/data/'
 
 
 file_paths = {

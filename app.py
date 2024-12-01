@@ -56,22 +56,22 @@ with ui.sidebar():
     )
     ui.input_action_button("reset", "Reset filters")
 
-    @render.text
-    def season():
-        return f"Selected [Season ID]: {input.select_season()}"
-    @render.text
-    def track():
-        return f"Selected [Track ID]: {input.select_track()}"
-    @render.text
-    def team():
-        return f"Selected [Team ID]: {input.select_team()}"
-    @render.text
-    def driver():
-        return f"Selected [Driver ID]: {input.select_driver()}"
+    # @render.text
+    # def season():
+    #     return f"Selected [Season ID]: {input.select_season()}"
+    # @render.text
+    # def track():
+    #     return f"Selected [Track ID]: {input.select_track()}"
+    # @render.text
+    # def team():
+    #     return f"Selected [Team ID]: {input.select_team()}"
+    # @render.text
+    # def driver():
+    #     return f"Selected [Driver ID]: {input.select_driver()}"
 
 # Content for each Question page
 with ui.nav_panel("Question 1"):
-    ui.h4("Question 1")
+    ui.h4("Which teams have dominated throughout time and how their performances varied?")
     with ui.layout_columns():
         with ui.card(full_screen=True):
             ui.card_header("Constructor Performance Over the Years")
@@ -84,7 +84,7 @@ with ui.nav_panel("Question 1"):
 
 
 with ui.nav_panel("Question 2"):
-    ui.h4("Question 2 content")
+    ui.h4("How have drivers performances evolved over time, and which drivers had the most consistent performance across seasons?")
     with ui.layout_columns():
         with ui.card(full_screen=True):
             ui.card_header("Driver Performance Over the Years")
@@ -96,7 +96,7 @@ with ui.nav_panel("Question 2"):
                 return plot_top_10_drivers(driver_top_10_average_points)
 
 with ui.nav_panel("Question 3"):
-    ui.h4("Question 3 Pit Times")
+    ui.h4("How have pit stop timings and strategies affected race outcomes?")
     with ui.layout_columns():
         with ui.card(full_screen=True):
             ui.card_header("Average Pit Stop Duration per Race")
