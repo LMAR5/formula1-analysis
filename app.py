@@ -4,7 +4,7 @@ import plotly.express as px
 # Load data and compute static values
 from processing.data_process_sidebar import teams_dict, seasons_dict, tracks_dict, drivers_dict, _select_filters_df
 from processing.data_process_q12 import app_dir, constructor_average_points_per_year, driver_average_points_per_year, driver_top_10_average_points, constructor_top_10_average_points
-from processing.data_process_q3 import app_dir
+from processing.data_process_q3 import app_dir, q3_dataframes, basic_pits
 from processing.data_process_q45 import app_dir, _qualipos_racepts_df
 from shinywidgets import render_plotly
 
@@ -13,6 +13,7 @@ from shiny.express import input, ui
 
 # Load plot functions
 from plots.plots_q12 import plot_constructor_performance, plot_driver_performance, plot_top_10_drivers, plot_top_10_teams
+from plots.plots_q3 import avg_pit_stop_duration, scatter_wins_vs_pit_times, histogram_pit_stop_laps, bubble_chart_wins_vs_pit_duration
 from plots.plots_q45 import qualipos_racepts_scatterplot, sprintpts_racepts_scatterplot, status_by_driver_piechart, drivers_per_team_barchart_q5, points_per_driver_barchart_q5, races_per_driver_barchart_q5
 
 # Page title
@@ -95,7 +96,32 @@ with ui.nav_panel("Question 2"):
                 return plot_top_10_drivers(driver_top_10_average_points)
 
 with ui.nav_panel("Question 3"):
-    ui.h4("Question 3 content")
+    ui.h4("Question 3 Pit Times")
+    with ui.layout_columns():
+        with ui.card(full_screen=True):
+            ui.card_header("Average Pit Stop Duration per Race")
+            @render_plotly
+            def avg_pit_stops_graph():
+                # Pass the relevant dataset to the function
+                return avg_pit_stop_duration(q3_super_filter(q3_dataframes['pit_stop_records']))
+            
+            @render_plotly
+            def bubble_cart_wins():
+                # Pass the relevant dataset to the function
+                return bubble_chart_wins_vs_pit_duration(q3_super_filter(q3_dataframes['pit_stop_records']))
+            
+            @render_plotly
+            def scatter_times_and_wins():
+                # Pass the relevant dataset to the function
+                return scatter_wins_vs_pit_times(q3_dataframes['pit_stop_records'], q3_data_filter())
+            
+            @render_plotly
+            def hist_of_laps():
+                # Pass the relevant dataset to the function
+                return histogram_pit_stop_laps(q3_track_filter(basic_pits))
+            
+            
+
 
 with ui.nav_panel("Question 4"):
     ui.h4("How can qualifying sessions and sprints impact drivers performance?")
@@ -123,7 +149,7 @@ with ui.nav_panel("Question 4"):
             @render.data_frame
             def races_summary_q4():
                 return render.DataGrid(summary_data_q4(), styles=[{"style": {"font-size": "0.8em"}}])
-        
+
 
 with ui.nav_panel("Question 5"):
     ui.h4("Which team has provided the most talented drivers throughout the years?")
@@ -280,7 +306,7 @@ def _():
     input_drivers.set(tuple())
     ui.update_selectize("select_track", choices=tracks_dict)
 
-    
+
 
 # Reactive calculation and effects for Questions 1 and 2
 # Author: Siham Argaw
@@ -318,7 +344,7 @@ def total_points_for_sel_constructors():
         filtered_data = constructor_average_points_per_year[constructor_average_points_per_year['name'].isin(selected_teams_lst)]
     else:
         # If no team is selected, use the entire dataset
-        filtered_data = constructor_average_points_per_year 
+        filtered_data = constructor_average_points_per_year
     return filtered_data
 
 @reactive.calc
@@ -331,14 +357,78 @@ def total_points_for_sel_drivers():
         filtered_data = driver_average_points_per_year[driver_average_points_per_year ['name'].isin(selected_drivers_lst)]
     else:
         # If no team is selected, use the entire dataset
-        filtered_data = driver_average_points_per_year  
+        filtered_data = driver_average_points_per_year
     return filtered_data
 
 # Reactive calculation and effects for Question 3
 # Author: Matthew Bush
 # --------------------------------------------------------
-
 ## Write your functions for Q3 here
+# How have pit stop Umings and strategies affected race outcomes?
+
+
+@reactive.calc
+def q3_data_filter():
+
+    # Get the selected driver(s) by the end user
+    selected_driver_tuple: tuple = input.select_driver()
+    # If any teams are selected by user filter df
+    if len(selected_driver_tuple) > 0 and selected_driver_tuple[0] is not None:
+        selected_drivers_lst = [drivers_dict[int(team_id)] for team_id in selected_driver_tuple]
+        filtered_data = q3_dataframes['pit_stop_records'][q3_dataframes['pit_stop_records'] ['name'].isin(selected_drivers_lst)]
+    else:
+        # If no team is selected, use the entire dataset
+        filtered_data = q3_dataframes['pit_stop_records']
+    
+    return filtered_data
+
+def q3_driver_filter(data):
+
+    # Get the selected driver(s) by the end user
+    selected_driver_tuple: tuple = input.select_driver()
+    # If any teams are selected by user filter df
+    if len(selected_driver_tuple) > 0 and selected_driver_tuple[0] is not None:
+        selected_drivers_lst = [drivers_dict[int(team_id)] for team_id in selected_driver_tuple]
+        filtered_data = data[data ['name'].isin(selected_drivers_lst)]
+    else:
+        # If no team is selected, use the entire dataset
+        filtered_data = data
+    
+    return filtered_data
+
+
+def q3_track_filter(data):
+    selected_track_tuple: tuple = input.select_track()
+
+    if len(selected_track_tuple) > 0 and selected_track_tuple[0] is not None:
+        tracks = [int(track_id) for track_id in selected_track_tuple]
+        filtered_data = data[data ['circuitId'].isin(tracks)]
+    else:
+        # If no team is selected, use the entire dataset
+        filtered_data = data
+
+    return filtered_data
+
+def q3_super_filter(data):
+    selected_track_tuple: tuple = input.select_track()
+
+    if len(selected_track_tuple) > 0 and selected_track_tuple[0] is not None:
+        tracks = [int(track_id) for track_id in selected_track_tuple]
+        filtered_data = data[data ['circuitId'].isin(tracks)]
+
+    else:
+        # If no team is selected, use the entire dataset
+        filtered_data = data   
+
+    # Get the selected driver(s) by the end user
+    selected_driver_tuple: tuple = input.select_driver()
+    # If any teams are selected by user filter df
+    if len(selected_driver_tuple) > 0 and selected_driver_tuple[0] is not None:
+        selected_drivers_lst = [drivers_dict[int(team_id)] for team_id in selected_driver_tuple]
+        filtered_data = filtered_data[filtered_data ['name'].isin(selected_drivers_lst)]
+    
+    return filtered_data
+    
 
 
 # Reactive calculation and effects for Questions 4 and 5
