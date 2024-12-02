@@ -21,8 +21,8 @@ teams_dict = dict(zip(teams_df["constructorId"], teams_df["name"]))
 seasons_dict = dict()
 for idx, team_year in enumerate(seasons_df["year"]):
     seasons_dict[idx] = team_year
-# Tracks dictionary: key -> Track ID (circuitId) and value -> Track's Name (name)
-tracks_dict = dict(zip(tracks_df["circuitId"], tracks_df["name"]))
+# Tracks dictionary: key -> Track ID (circuitId) and value -> Track's Name (location)
+tracks_dict = dict(zip(tracks_df["circuitId"], tracks_df["location"]))
 # Drivers dictionary: key -> Driver ID (driverId) and value -> Driver's full name (forename + surname)
 drivers_df["fullname"] = drivers_df["forename"] + " " + drivers_df["surname"]
 drivers_dict = dict(zip(drivers_df["driverId"], drivers_df["fullname"]))
