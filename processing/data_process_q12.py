@@ -36,7 +36,7 @@ constructor_average_points_per_year = pd.merge(constructor_total_points_per_year
 
 # Calculate average points per year for each constructor
 constructor_average_points_per_year['averagePoints'] = constructor_average_points_per_year['total_points'] / constructor_average_points_per_year['raceCount']
-
+constructor_average_points_per_year = constructor_average_points_per_year.sort_values(by='year').reset_index(drop=True)
 
 # DF will be used to plot top 10 constructors of all time based on all points accumulated by each driver
 
@@ -75,7 +75,7 @@ driver_average_points_per_year = pd.merge(driver_total_points_per_year, driver_r
 # Calculate average points per year for each driver
 driver_average_points_per_year['averagePoints'] = driver_average_points_per_year['total_points'] / driver_average_points_per_year['raceCount']
 
-
+driver_average_points_per_year = driver_average_points_per_year.sort_values(by='year').reset_index(drop=True)
 # DF will be used to plot top 10 drivers of all time based on all points accumulated by each driver
 
 # Group by driverId and name, and sum the average points
